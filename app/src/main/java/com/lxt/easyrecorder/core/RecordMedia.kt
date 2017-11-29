@@ -6,9 +6,11 @@ package com.lxt.easyrecorder.core
  */
 object RecordMedia {
 
-    const val MIME_TYPE = "video/avc"
-
     const val FRAME_COUNT = 26
 
     const val FRAME_INTERVAL = 12
+
+    const val MIME_TYPE = "video/avc"
+
+    const val NAME_DISPLAY = "easyRecoder"
 }
