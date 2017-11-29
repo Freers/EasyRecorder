@@ -13,6 +13,7 @@ import com.lxt.easyrecorder.core.RecordMedia.FRAME_COUNT
 import com.lxt.easyrecorder.core.RecordMedia.FRAME_INTERVAL
 import com.lxt.easyrecorder.core.RecordMedia.MIME_TYPE
 import com.lxt.easyrecorder.core.RecordMedia.NAME_DISPLAY
+import com.lxt.easyrecorder.util.Log
 import java.io.IOException
 
 /**
@@ -20,6 +21,19 @@ import java.io.IOException
  * @since 2017/11/29.
  */
 class LazyRecorder {
+
+    private var recording: Boolean = false
+        get() {
+            if (field) {
+                Log.i("recording")
+            }
+            return field
+        }
+        set(value) {
+            Log.i("set record running " + value)
+            field = value
+        }
+
 
     private var recorder: RecordParameter
 
@@ -39,7 +53,7 @@ class LazyRecorder {
         mediaCode?.start()
     }
 
-    fun clear() {
+    fun stop() {
         mediaCode?.apply {
             stop()
             release()
@@ -78,4 +92,7 @@ class LazyRecorder {
                 null, null)
     }
 
+    fun record() {
+
+    }
 }
