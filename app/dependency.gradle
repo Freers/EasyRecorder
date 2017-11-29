@@ -1,0 +1,13 @@
+def delegate(Closure closure) {
+    closure.delegate = dependencies
+    return closure
+}
+
+def ui = delegate {
+    implementation 'com.android.support.constraint:constraint-layout:1.0.0'
+}
+
+dependencies {
+
+    ui()
+}
