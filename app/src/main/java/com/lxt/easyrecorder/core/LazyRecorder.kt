@@ -40,7 +40,7 @@ class LazyRecorder(recordParamter: RecordParameter) {
 
     private var muxerReady = false
 
-    private var recording: Boolean = true
+    var recording: Boolean = false
         get() {
             if (field) {
                 Log.i("recording")

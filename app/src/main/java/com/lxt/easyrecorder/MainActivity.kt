@@ -1,12 +1,13 @@
 package com.lxt.easyrecorder
 
 import android.Manifest
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
 import android.media.projection.MediaProjectionManager
 import android.os.Bundle
-import android.support.design.widget.Snackbar
-import android.support.v4.content.ContextCompat
+import android.os.IBinder
 import android.support.v7.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
@@ -16,21 +17,50 @@ import com.lxt.easyrecorder.core.RecordMedia.EXTRA_DATA
 import com.lxt.easyrecorder.core.RecordMedia.REQUEST_CODE_CAPTURE_SCREEN
 import com.lxt.easyrecorder.core.RecordService
 import com.lxt.easyrecorder.util.AppCompatUtil
+import com.lxt.easyrecorder.util.Log
+import com.lxt.record.IRecordService
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
 
-    var projectionManager: MediaProjectionManager? = null
+    private lateinit var serviceIntent: Intent
+
+    private var serviceBound = false
+
+    private var recordService: IRecordService? = null
+
+    private var projectionManager: MediaProjectionManager? = null
+
+    private val connection: ServiceConnection = object : ServiceConnection {
+
+        override fun onServiceDisconnected(name: ComponentName?) {
+            Log.i("onServiceDisconnected")
+            serviceBound = false
+            recordService = null
+        }
+
+        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+            Log.i("onServiceConnected")
+            serviceBound = true
+            recordService = IRecordService.Stub.asInterface(service)
+        }
+
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
-        AppCompatUtil.checkPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        serviceIntent = Intent(this, RecordService::class.java)
         projectionManager = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
-        fab.setOnClickListener { view ->
-            val captureIntent = projectionManager?.createScreenCaptureIntent()
-            startActivityForResult(captureIntent, REQUEST_CODE_CAPTURE_SCREEN)
+        AppCompatUtil.checkPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        fab.setOnClickListener {
+            if (recordService?.recording()!!) {
+                recordService?.stop()
+            } else {
+                val captureIntent = projectionManager?.createScreenCaptureIntent()
+                startActivityForResult(captureIntent, REQUEST_CODE_CAPTURE_SCREEN)
+            }
         }
     }
 
@@ -52,6 +82,12 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (!serviceBound)
+            bindService(serviceIntent, connection, BIND_AUTO_CREATE)
+    }
+
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == RecordMedia.REUQEST_CODE_PERMISSION) {
@@ -62,10 +98,9 @@ class MainActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_CODE_CAPTURE_SCREEN) {
-            val intent = Intent(this, RecordService::class.java)
-            intent.putExtra(EXTRA_CODE, resultCode)
-            intent.putExtra(EXTRA_DATA, data)
-            startService(intent)
+            serviceIntent.putExtra(EXTRA_CODE, resultCode)
+            serviceIntent.putExtra(EXTRA_DATA, data)
+            startService(serviceIntent)
         }
     }
 }
