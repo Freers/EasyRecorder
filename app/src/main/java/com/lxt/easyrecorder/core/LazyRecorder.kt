@@ -13,6 +13,8 @@ import com.lxt.easyrecorder.core.RecordMedia.FRAME_COUNT
 import com.lxt.easyrecorder.core.RecordMedia.FRAME_INTERVAL
 import com.lxt.easyrecorder.core.RecordMedia.MIME_TYPE
 import com.lxt.easyrecorder.core.RecordMedia.NAME_DISPLAY
+import com.lxt.easyrecorder.core.RecordMedia.TIME_NEGATIVE_OUT
+import com.lxt.easyrecorder.core.RecordMedia.TIME_RETRY_AGAIN
 import com.lxt.easyrecorder.util.Log
 import java.io.IOException
 
@@ -21,19 +23,6 @@ import java.io.IOException
  * @since 2017/11/29.
  */
 class LazyRecorder {
-
-    private var recording: Boolean = false
-        get() {
-            if (field) {
-                Log.i("recording")
-            }
-            return field
-        }
-        set(value) {
-            Log.i("set record running " + value)
-            field = value
-        }
-
 
     private var recorder: RecordParameter
 
@@ -45,15 +34,29 @@ class LazyRecorder {
 
     private var virtualDispaly: VirtualDisplay? = null
 
+    private var bufferInfo = MediaCodec.BufferInfo()
+
+    private var trackIndex: Int? = -1
+
+    private var muxerReady = false
+
+    private var recording: Boolean = true
+        get() {
+            if (field) {
+                Log.i("recording")
+            }
+            return field
+        }
+        set(value) {
+            Log.i("set record running " + value)
+            field = value
+        }
+
     constructor(recordParamter: RecordParameter) {
         recorder = recordParamter
     }
 
-    fun start() {
-        mediaCode?.start()
-    }
-
-    fun stop() {
+    private fun release() {
         mediaCode?.apply {
             stop()
             release()
@@ -71,7 +74,7 @@ class LazyRecorder {
     }
 
     @Throws(IOException::class)
-    fun createRecordMedia() {
+    private fun createRecordMedia() {
         val mediaFormat = MediaFormat.createVideoFormat(MIME_TYPE, recorder.width, recorder.height)
                 .apply {
                     setInteger(KEY_COLOR_FORMAT, COLOR_FormatSurface)
@@ -90,9 +93,56 @@ class LazyRecorder {
         virtualDispaly = recorder.mediaProje?.createVirtualDisplay(NAME_DISPLAY, recorder.width,
                 recorder.height, recorder.disPixel, DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC, surface,
                 null, null)
+        mediaCode?.start()
     }
 
-    fun record() {
+    fun startRecord() {
+        recording = true
+        createRecordMedia()
+        while (recording) {
+            val res = mediaCode?.dequeueOutputBuffer(bufferInfo, TIME_NEGATIVE_OUT)
+            if (res!! >= 0) {
+                if (!muxerReady) {
+                    throw IllegalStateException()
+                } else {
+                    writeData(res)
+                }
+            } else if (res == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
+                trackMuxer()
+            } else if (res == MediaCodec.INFO_TRY_AGAIN_LATER) {
+                Thread.sleep(TIME_RETRY_AGAIN)
+            }
+        }
+        release()
+    }
 
+    private fun writeData(res: Int) {
+        var buffer = mediaCode?.getOutputBuffer(res)
+        val flag = MediaCodec.BUFFER_FLAG_CODEC_CONFIG
+        if (bufferInfo.flags.and(flag) != 0) {
+            bufferInfo.size = 0
+        }
+        if (bufferInfo.size == 0) {
+            buffer = null
+        }
+        buffer?.apply {
+            position(bufferInfo.offset)
+            limit(bufferInfo.offset + bufferInfo.size)
+            trackIndex?.let { mediaMuxer?.writeSampleData(it, buffer, bufferInfo) }
+        }
+        mediaCode?.releaseOutputBuffer(res, false)
+    }
+
+    private fun trackMuxer() {
+        if (muxerReady) {
+            throw IllegalStateException()
+        }
+        trackIndex = mediaMuxer?.addTrack(mediaCode?.outputFormat)
+        mediaMuxer?.start()
+        muxerReady = true
+    }
+
+    fun endRecord() {
+        recording = false
     }
 }

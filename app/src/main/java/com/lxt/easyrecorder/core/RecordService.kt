@@ -1,17 +1,14 @@
 package com.lxt.easyrecorder.core
 
-import android.app.Service
+import android.app.IntentService
 import android.content.Intent
-import android.os.IBinder
 
 /**
  * @author lxt <lxt352@gmail.com>
  * @since 2017/11/29.
  */
-class RecordService : Service() {
+class RecordService : IntentService(RecordService::class.simpleName) {
 
-    override fun onBind(intent: Intent?): IBinder {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    override fun onHandleIntent(intent: Intent?) {
     }
-
 }
