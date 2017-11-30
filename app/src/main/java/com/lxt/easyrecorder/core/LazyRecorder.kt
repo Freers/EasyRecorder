@@ -22,9 +22,9 @@ import java.io.IOException
  * @author lxt <lxt352@gmail.com>
  * @since 2017/11/29.
  */
-class LazyRecorder {
+class LazyRecorder(recordParamter: RecordParameter) {
 
-    private var recorder: RecordParameter
+    private var recorder: RecordParameter = recordParamter
 
     private var mediaCode: MediaCodec? = null
 
@@ -52,10 +52,6 @@ class LazyRecorder {
             field = value
         }
 
-    constructor(recordParamter: RecordParameter) {
-        recorder = recordParamter
-    }
-
     private fun release() {
         mediaCode?.apply {
             stop()
@@ -75,7 +71,6 @@ class LazyRecorder {
 
     @Throws(IOException::class)
     private fun createRecordMedia() {
-        Log.i("create record media")
         val mediaFormat = MediaFormat.createVideoFormat(MIME_TYPE, recorder.width, recorder.height)
                 .apply {
                     setInteger(KEY_COLOR_FORMAT, COLOR_FormatSurface)
@@ -98,11 +93,9 @@ class LazyRecorder {
     }
 
     fun startRecord() {
-        Log.i("start recording")
         recording = true
         createRecordMedia()
         while (recording) {
-            Log.i("recording")
             val res = mediaCode?.dequeueOutputBuffer(bufferInfo, TIME_NEGATIVE_OUT)
             if (res!! >= 0) {
                 if (!muxerReady) {
@@ -113,7 +106,6 @@ class LazyRecorder {
             } else if (res == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
                 trackMuxer()
             } else if (res == MediaCodec.INFO_TRY_AGAIN_LATER) {
-                Log.i("try later")
                 Thread.sleep(TIME_RETRY_AGAIN)
             }
         }
@@ -121,7 +113,6 @@ class LazyRecorder {
     }
 
     private fun writeData(res: Int) {
-        Log.i("write data " + bufferInfo.size)
         var buffer = mediaCode?.getOutputBuffer(res)
         val flag = MediaCodec.BUFFER_FLAG_CODEC_CONFIG
         if (bufferInfo.flags.and(flag) != 0) {
@@ -142,14 +133,12 @@ class LazyRecorder {
         if (muxerReady) {
             throw IllegalStateException()
         }
-        Log.i("set muxer ready")
         trackIndex = mediaMuxer?.addTrack(mediaCode?.outputFormat)
         mediaMuxer?.start()
         muxerReady = true
     }
 
     fun endRecord() {
-        Log.i("end")
         recording = false
     }
 }
