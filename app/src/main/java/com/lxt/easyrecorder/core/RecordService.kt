@@ -4,17 +4,14 @@ import android.app.IntentService
 import android.content.Context
 import android.content.Intent
 import android.graphics.Point
-import android.icu.text.DateFormat
-import android.icu.text.SimpleDateFormat
 import android.media.projection.MediaProjectionManager
 import android.os.Environment
 import android.os.Handler
 import android.view.WindowManager
 import com.lxt.easyrecorder.core.RecordMedia.EXTRA_CODE
 import com.lxt.easyrecorder.core.RecordMedia.EXTRA_DATA
-import com.lxt.easyrecorder.util.DateFormater
+import com.lxt.easyrecorder.util.DateFormatter
 import java.io.File
-import java.util.*
 
 /**
  * @author lxt <lxt352@gmail.com>
@@ -44,7 +41,7 @@ class RecordService : IntentService(RecordService::class.simpleName) {
             bitRate = RecordMedia.BIT_RATE
             disPixel = RecordMedia.PIXEL_DISPLAY
             storePath = File(Environment.getExternalStorageDirectory(), "EasyRecorder-"
-                    + DateFormater.formatDate(System.currentTimeMillis()) + ".mp4").absolutePath
+                    + DateFormatter.formatDate(System.currentTimeMillis()) + ".mp4").absolutePath
         }
         return parameter
     }
