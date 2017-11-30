@@ -14,6 +14,10 @@ object RecordMedia {
 
     const val TIME_RETRY_AGAIN = 20L
 
+    const val BIT_RATE = 6000000
+
+    const val PIXEL_DISPLAY = 1
+
     const val MIME_TYPE = "video/avc"
 
     const val NAME_DISPLAY = "easyRecoder"
