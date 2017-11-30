@@ -18,7 +18,15 @@ object RecordMedia {
 
     const val PIXEL_DISPLAY = 1
 
+    const val REQUEST_CODE_CAPTURE_SCREEN = 16
+
+    const val REUQEST_CODE_PERMISSION = 17
+
     const val MIME_TYPE = "video/avc"
 
     const val NAME_DISPLAY = "easyRecoder"
+
+    const val EXTRA_CODE = "extra_code"
+
+    const val EXTRA_DATA = "extra_data"
 }
