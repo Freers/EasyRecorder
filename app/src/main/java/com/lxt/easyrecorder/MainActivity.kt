@@ -1,6 +1,7 @@
 package com.lxt.easyrecorder
 
 import android.Manifest
+import android.app.Activity
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -11,15 +12,19 @@ import android.os.IBinder
 import android.support.v7.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
+import android.view.animation.*
 import com.lxt.easyrecorder.core.RecordMedia
 import com.lxt.easyrecorder.core.RecordMedia.EXTRA_CODE
 import com.lxt.easyrecorder.core.RecordMedia.EXTRA_DATA
 import com.lxt.easyrecorder.core.RecordMedia.REQUEST_CODE_CAPTURE_SCREEN
 import com.lxt.easyrecorder.core.RecordService
+import com.lxt.easyrecorder.demain.Video
 import com.lxt.easyrecorder.util.AppCompatUtil
 import com.lxt.easyrecorder.util.Log
+import com.lxt.easyrecorder.view.RecyclerViewAdapter
 import com.lxt.record.IRecordService
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.content_main.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -54,13 +59,30 @@ class MainActivity : AppCompatActivity() {
         serviceIntent = Intent(this, RecordService::class.java)
         projectionManager = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
         AppCompatUtil.checkPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-        fab.setOnClickListener {
-            Log.i("service " + recordService + " " + recordService?.recording())
-            if (recordService?.recording()!!) {
-                recordService?.stop()
-            } else {
-                val captureIntent = projectionManager?.createScreenCaptureIntent()
-                startActivityForResult(captureIntent, REQUEST_CODE_CAPTURE_SCREEN)
+        fab.apply {
+            val animation1 = ScaleAnimation(1.2f, 0.6f, 1.2f, 0.6f, 0.5f, 0.5f)
+            with(animation1) {
+                duration = 1000
+                interpolator = AccelerateDecelerateInterpolator()
+                repeatCount = Animation.INFINITE
+            }
+            val animation2 = ScaleAnimation(0.6f, 1.2f, 0.6f, 1.2f, 0.5f, 0.5f)
+            with(animation2) {
+                duration = 1000
+                repeatCount = Animation.INFINITE
+            }
+            animation = AnimationSet(true).apply {
+                addAnimation(animation1)
+                addAnimation(animation2)
+            }
+//            animate()
+            setOnClickListener {
+                if (recordService?.recording()!!) {
+                    recordService?.stop()
+                } else {
+                    val captureIntent = projectionManager?.createScreenCaptureIntent()
+                    startActivityForResult(captureIntent, REQUEST_CODE_CAPTURE_SCREEN)
+                }
             }
         }
     }
@@ -104,7 +126,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == REQUEST_CODE_CAPTURE_SCREEN) {
+        if (requestCode == REQUEST_CODE_CAPTURE_SCREEN && resultCode == Activity.RESULT_OK) {
             serviceIntent.putExtra(EXTRA_CODE, resultCode)
             serviceIntent.putExtra(EXTRA_DATA, data)
             startService(serviceIntent)
