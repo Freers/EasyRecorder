@@ -6,7 +6,6 @@ import android.content.Intent
 import android.graphics.Point
 import android.media.projection.MediaProjectionManager
 import android.os.Environment
-import android.os.Handler
 import android.os.IBinder
 import android.view.WindowManager
 import com.lxt.easyrecorder.core.RecordMedia.EXTRA_CODE
@@ -41,6 +40,7 @@ class RecordService : IntentService(RecordService::class.simpleName) {
 
         override fun stop() {
             recorder?.endRecord()
+            recorder = null
         }
 
     }
@@ -56,13 +56,14 @@ class RecordService : IntentService(RecordService::class.simpleName) {
     }
 
     override fun onHandleIntent(intent: Intent?) {
-        val resultCode = intent?.getIntExtra(EXTRA_CODE, -10010)
-        val data = intent?.getParcelableExtra<Intent>(EXTRA_DATA)
-        val projectionManager = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
-        resultCode?.let { parameter?.mediaProje = projectionManager.getMediaProjection(resultCode, data) }
-        if (recorder == null)
+        if (recorder == null) {
+            val resultCode = intent?.getIntExtra(EXTRA_CODE, -10010)
+            val data = intent?.getParcelableExtra<Intent>(EXTRA_DATA)
+            val projectionManager = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+            resultCode?.let { parameter?.mediaProje = projectionManager.getMediaProjection(resultCode, data) }
             parameter?.let { recorder = LazyRecorder(it) }
-        recorder?.startRecord()
+            recorder?.startRecord()
+        }
     }
 
 

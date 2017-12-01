@@ -55,6 +55,7 @@ class MainActivity : AppCompatActivity() {
         projectionManager = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
         AppCompatUtil.checkPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
         fab.setOnClickListener {
+            Log.i("service " + recordService + " " + recordService?.recording())
             if (recordService?.recording()!!) {
                 recordService?.stop()
             } else {
@@ -86,6 +87,12 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         if (!serviceBound)
             bindService(serviceIntent, connection, BIND_AUTO_CREATE)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        if (serviceBound)
+            unbindService(connection)
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
