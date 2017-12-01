@@ -6,6 +6,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.graphics.Color
 import android.media.projection.MediaProjectionManager
 import android.os.Bundle
 import android.os.IBinder
@@ -23,6 +24,7 @@ import com.lxt.easyrecorder.util.AppCompatUtil
 import com.lxt.easyrecorder.util.Log
 import com.lxt.easyrecorder.view.RecyclerViewAdapter
 import com.lxt.record.IRecordService
+import com.tapadoo.alerter.Alerter
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
 
@@ -79,6 +81,7 @@ class MainActivity : AppCompatActivity() {
             setOnClickListener {
                 if (recordService?.recording()!!) {
                     recordService?.stop()
+                    showAlter(context.getString(R.string.message_stop_recording))
                 } else {
                     val captureIntent = projectionManager?.createScreenCaptureIntent()
                     startActivityForResult(captureIntent, REQUEST_CODE_CAPTURE_SCREEN)
@@ -130,6 +133,16 @@ class MainActivity : AppCompatActivity() {
             serviceIntent.putExtra(EXTRA_CODE, resultCode)
             serviceIntent.putExtra(EXTRA_DATA, data)
             startService(serviceIntent)
+            showAlter(getString(R.string.message_start_recording))
         }
+    }
+
+    private fun showAlter(message: String) {
+        Alerter.create(this)
+                .setText(message)
+                .setBackgroundColorRes(R.color.colorAmber)
+                .setIcon(R.drawable.alerter_ic_face)
+                .enableSwipeToDismiss()
+                .show()
     }
 }
