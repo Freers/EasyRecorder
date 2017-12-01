@@ -8,5 +8,5 @@ import android.text.format.DateFormat
  */
 object DateFormatter {
 
-    fun formatDate(time: Long): CharSequence = DateFormat.format("yyyy-MM-dd-hh:mm:ss", time)
+    fun formatDate(time: Long): CharSequence = DateFormat.format("yyyyMMddhhmmss", time)
 }
