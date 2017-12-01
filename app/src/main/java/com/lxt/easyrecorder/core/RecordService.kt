@@ -76,8 +76,11 @@ class RecordService : IntentService(RecordService::class.simpleName) {
             height = screen.y
             bitRate = RecordMedia.BIT_RATE
             disPixel = RecordMedia.PIXEL_DISPLAY
-            storePath = File(Environment.getExternalStorageDirectory(), "EasyRecorder-"
-                    + DateFormatter.formatDate(System.currentTimeMillis()) + ".mp4").absolutePath
+            File(Environment.getExternalStorageDirectory().absolutePath + "/EasyRecorder/video").let {
+                if (!it.exists() && it.isDirectory)
+                    it.mkdirs()
+                storePath = it.absolutePath + "/EasyRecorder-" + DateFormatter.formatDate(System.currentTimeMillis()) + ".mp4"
+            }
         }
         return parameter
     }
